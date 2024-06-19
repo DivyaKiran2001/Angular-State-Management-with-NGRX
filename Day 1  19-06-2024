@@ -12,7 +12,7 @@ The State Management LifeCYcle contains the below things
 4.Selector - This will take the necessary things from the store and pass it to the component for the display
 5.Component - It will display the Ui for the selector
 
-Action -> Reducer -> Store -> Selector -> Component
+Action -> Reducer -> Store -> Selector -> Component -> Action
 
 Installation:
 
