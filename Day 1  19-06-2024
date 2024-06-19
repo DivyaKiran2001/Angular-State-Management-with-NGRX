@@ -1,0 +1,130 @@
+Day 1
+
+19-06-2024
+
+Angular State Management with NGRX
+
+The State Management LifeCYcle contains the below things
+
+1.Action - Contains the action methods like example increment,decrement
+2.Reducer - This will contain the previous states and handles the operations (manipulation) by the action component
+3.Store - Will contain all the data of the application
+4.Selector - This will take the necessary things from the store and pass it to the component for the display
+5.Component - It will display the Ui for the selector
+
+Action -> Reducer -> Store -> Selector -> Component
+
+Installation:
+
+You can install the Store to your project with the following command
+
+ng add @ngrx/store@latest
+
+To create action you can name the file as 
+Ex : counter.action.ts
+
+-------------Creating Action code---------------
+
+import {createAction} from "@ngrx/store";
+
+
+export const increment=createAction('[Counter Component] Increment'); 
+export const increment=createAction('[Counter Component] Increment');
+export const increment=createAction('[Counter Component] Increment');
+
+
+-------------Creating Reducer code---------------
+
+import {createReducer,on} from '@ngrx/store';
+import {decrement,increment} from './counter.actions';
+
+export interface CounterState
+{
+  count:number
+}
+
+export const initialCounterState:CounterState = {
+  count:0
+}
+
+export const counterReducer = createReducer{
+ initialCounterState,
+ on{increment,state => ({...state,count:state.count+1}),
+ on{decrement,state => ({...state,count:state.count-1}),
+ on{reset,state => ({...state,count:0}),
+}
+
+--------------- Creating State -----------
+
+Creating a global state for the store
+
+import {} from "./counter/counter.reducer";
+
+export interface AppState {
+  counter: CounterState
+}
+
+
+--------------- Creating Selector ------------
+
+export const selectCounterState = (state: AppState) => state.counter;
+
+export const selectCount = createSelector(
+ selectCounterState,
+ (state) => state.count
+)
+
+
+-------------- Creating Component (counter.component.ts)---- -----------------
+
+export class CounterComponent {
+ count$: Observable<number>;
+ constructor(private store:Store<AppState>){
+  this.count$ = this.store.select(selectCount)
+ }
+}
+
+------------ counter.component.html ----------------
+
+<p> { count$ | async }</p>
+
+<button (click)="increment()"></button>
+<button (click)="decrement()"></button>
+<button (click)="reset()"></button>
+
+
+----------------- counter.component.ts ----------------
+
+
+export class CounterComponent {
+ count$: Observable<number>;
+ constructor(private store:Store<AppState>){
+  this.count$ = this.store.select(selectCount)
+ }
+ 
+ increment(){
+  this.store.dispatch(increment())
+ }
+ decrement() {
+  this.store.dispatch(decrement())
+ }
+ reset() {
+  this.store.dispatch(reset())
+ }
+}
+
+
+Uses of using ngrx over subscribing to the Observable:
+
+**The main use of NGRX in angular is it manages the state globally so 
+we can use that state across any component in the web application
+
+For example here the counter state which is in counter component can
+be used in other components like Home component also.
+
+
+You can refer to the implementation of this counter application here:
+https://github.com/DivyaKiran2001/ngrx-angular-store-yt/tree/main
+
+
+
