@@ -58,7 +58,7 @@ export const counterReducer = createReducer{
 
 Creating a global state for the store
 
-import {} from "./counter/counter.reducer";
+import {CounterState} from "./counter/counter.reducer";
 
 export interface AppState {
   counter: CounterState
