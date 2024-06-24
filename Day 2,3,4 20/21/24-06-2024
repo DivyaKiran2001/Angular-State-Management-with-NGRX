@@ -1,0 +1,294 @@
+Day 2,3,4
+20/21/24-06-2024
+
+Deep Dive into Angular State Management with NGRX (For a Shopping Application)
+
+
+/ * Interface */
+
+export interface IProduct{
+ id: number;
+ title: string;
+ price: number;
+ description: string;
+ category: string;
+ image: string;
+ rating: Rating;
+ quantity: number;
+}
+
+export interface Rating{
+ rate: number;
+ count: number;
+}
+
+
+/* Adding Extra Properties for example quantity to the existing API data */
+ 
+-----------------product-api.service.ts------------
+
+import {HttpClient} from '@angular/common/http';
+import {Injectable,inject} from '@angular/core';
+import {IProduct} from '../models/product.interface';
+import {map} from 'rxjs';
+
+@Injectable({
+ providedIn: 'root';
+})
+
+export class ProductApiService{
+ http = inject(HttpClient);
+ constructor() {}
+
+ getProducts(){
+  return this.http.get<IProduct[]>('https://fakestoreapi.com/products');
+  .pipe(
+    map(((products) =>{
+     return products.map((product) => {
+      return {...product,quantity:1}
+     })
+    }))
+   )
+ }
+}
+
+
+
+/ * Creating Actions (cart.action.ts) - addToCart,*/ * 
+
+
+import {createAction,props} from '@ngrx/store';
+import {IProduct} from '../../shared/models/product.interface';
+
+export const addToCart = createAction('[Cart Component] AddToCart',props<{product: IProduct}>());
+
+
+export const incrementProduct = createAction('[Cart Component] IncrementProduct',props<{product: productId:number}>());
+
+
+export const decrementProduct = createAction('[Cart Component] DecrementProduct',props<{product: productId:number}>());
+
+
+export const removeItem = createAction('[Cart Component] RemoveItem',props<{product: productId:number}>());
+
+
+/* Creating Reducers (cart.reducer.ts) - */
+
+
+import {createReducer,on} from '@ngrx/store';
+import {IProduct} from '../../shared/models/product.interface';
+import * as CartAction from './cart.action';
+
+export interface CartState {
+  products:IProduct[];
+  totalPrice? : number
+}
+
+export const initialCounterState : CartState = {
+  products:[]
+};
+
+export function calculateTotalPrice(products: IProduct[]) {
+ return products.reduce((total,product) => total + (product.price * product.quantity),0)
+}
+
+export const cartReducer = createReducer {
+ initialCounterState,
+ on(CartActions.addToCart, (state, {product}) => {
+  const updatedProduct = [...state.products,product];
+  return {
+   ...state,
+   products:updatedProduct,
+   totalPrice: calculateTotalPrice(upatedProduct)
+  };
+ }),
+ 
+ on(CartActions.removeItem, () => {
+  const updatedProducts = state.products.filter(
+    (product) => product.id ! == productId
+  );
+  return {
+   ...state,
+   products:updatedProducts,
+   totalPrice: calculateTotalPrice(upatedProduct)
+  };
+ }
+  
+ );
+
+
+ on(CartActins.incrementProduct, (state, {productId}) => {
+  const updatedProduct = state.products.map((product) => product.id === productid ? {...product,quantity:product.quantity + 1} : product );
+  return {
+   ...state,
+   products:updatdProducts,
+   totalPrice: calculateTotalPrice(upatedProduct)
+  };
+ }),
+ on(CartActins.decrementProduct, (state, {productId}) => {
+  const updatedProduct = state.products.map((product) => product.id === productid ? {...product,quantity:product.quantity - 1} : product );
+  return {
+   ...state,
+   products:updatdProducts,
+   totalPrice: calculateTotalPrice(upatedProduct)
+  };
+ })
+
+};
+
+
+--------------- Creating State -----------
+
+Creating a global state for the store
+
+import {CounterState} from "./counter/counter.reducer";
+import {CartState} from "./cart/cart.reducer.ts
+
+export interface AppState {
+  counter: CounterState,
+  cart: CartState 
+}
+
+
+
+/******* Creating Selector ******/
+
+------------ cart.selector.ts --------------
+
+import {createSelector} from '@ngrx/store';
+import {AppState} from '../app.state';
+import {CartState} from './cart.reducer';
+
+export const selectCartState = (state: AppState) => state.cart
+
+export const selectCartProducts = createSelector(
+ selectCartState,
+ (state : CartState) => state.products
+);
+
+export const selectTotal = createSelector(
+ selectCartState,
+ (state: CartState) => state.totalPrice
+);
+
+
+------------------------------COMPONENT VIEW-------------------------------------------
+
+-------- product-card.component.html -------------
+
+<button (click)="addToCart(product)"></button>
+
+
+-------- product-card.component.ts ------------- (child component)
+
+export class ProductCardComponent implements OnInit {
+ @Input() product!: IProduct;
+ @Output() handleAdd = new EventEmitter();
+ 
+ constructor() {}
+
+ ngOnInit() {}
+
+ addToCart(product: IProduct) {
+  this.handleAdd.emit(product)
+ }
+}
+
+
+---------------  products.component.html --------------- (Parent component)
+
+<div class="grid">
+ @for (item of products$ | async; track $index) {
+  <app-product-card [product]="item" (handleAdd)="addItemToCart($event)"/>
+ }
+</div>
+
+----------------- products.component.ts -----------------
+
+(component ui)
+
+constructor(private store: Store<{cart:{products:IProduct}}>){
+ 
+}
+
+addItemToCart(product: IProduct) {
+ this.store.dispatch(addToCart({product}))
+}
+
+
+
+---------------------------- cart.component.ts --------------
+
+export class CartComponent {
+ cartItem$ = this.store.select(selectCartProducts)
+ totalPrice$ = this.store.select(selectTotal)
+ constructor(private store: Store<AppState>) {}
+ 
+}
+
+----------------------------- cart.component.html ------------------
+<h1> Cart Works </h1>
+<span>
+ {{cartItems$ | async | json}}
+</span>
+
+<p>Total Amount : {{totalPrice$ | async | currency}}</p>
+
+----------------------  app.component.ts ------------------
+
+export class AppComponent {
+ product$ : Observable<IProduct[]>
+
+ constructor(private store : Store<AppState>){
+  this.products$ = this.store.select(selectCartProducts);
+ }
+}
+
+-------------------- app.component.html -------------
+
+<p> Cart : {{(products$ | async) ? length}} </p>
+
+
+------------------- cart.component.html -----------------
+
+<span>Items in the cart : {{cartItems$ | async}}</span>
+
+---------------- cart.component.ts ------------------
+
+export class CartComponent {
+ cartItems$ = this.store.select(selectCartProducts)
+ constructor(private store: Store<AppState>) {}
+
+ remove(productid: number) {
+  this.store.dispatch(removeItem({productId}));
+ }
+}
+
+remove(productId: number) {
+  this.store.dispatch(removeItem({productId}));
+ }
+}
+ 
+
+increment(productId: number) {
+  this.store.dispatch(incrementProduct({productId}));
+ }
+}
+
+
+decrement(productId: number) {
+  this.store.dispatch(decrementProduct({productId}));
+ }
+}
+
+
+
+
+
+----------------------- cart.component.html -----------------
+
+
+<button (click)="remove(item.id)"></button>
+
+<button (click)="increment(item.id)"></button>
+<button (click)="decrement(item.id)"></button>
