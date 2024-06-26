@@ -1,0 +1,63 @@
+Day 6 
+
+26-06-2024
+
+Signals in Angular
+
+How to share data between unlrelated components ??
+
+Using Observable and Behaviour Subject
+
+
+Signals : Signals are a reactive programming concept where a piece of state automatically updates when its dependencies changes
+
+Definition : A signal is a wrapper around a value that notifies interested consumers when that value changes. Signals can contain any value, from primitives to complex data structures.
+
+--->  You read a signal's value by calling its getter function, which allows Angular to track where the signal is used.
+
+--->  Signals may be either writable or read-only.
+
+1. Writable Signals :
+
+Writable signals provide an API for updating their values directly. You create writable signals by calling the signal function with the signal's initial value
+
+Example:
+
+const count = signal(0);
+// Signals are getter functions - calling them reads their value.
+console.log('The count is: ' + count());
+
+
+--> To change the value of a writable signal, either .set() it directly:
+
+count.set(3);
+
+-->  or use the .update() operation to compute a new value from the previous one
+
+// Increment the count by 1.
+count.update(value => value + 1);
+
+Writable signals have the type WritableSignal.
+
+To take the signal value in the component you have to call the variable as a method
+
+Example : counter.component.html
+
+<p>{{this.count()}}</p>
+
+
+
+
+
+2. Computed Signals:
+
+Computed signal are read-only signals that derive their value from other signals. You define computed signals using the computed function and specifying a derivation
+
+Example:
+
+const count: WritableSignal<number> = signal(0);
+const doubleCount: Signal<number> = computed(() => count() * 2);
+
+The doubleCount signal depends on the count signal. Whenever count updates, Angular knows that doubleCount needs to update as well.
+
+
