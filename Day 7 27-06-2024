@@ -1,0 +1,186 @@
+Day 7
+
+27-06-2024
+
+Now we will do what we have done in ngrx counter and shopping web application using Angular NGRX Signal store.
+
+
+>>> products
+  -- product.component.html
+  -- product.component.ts
+>>> store
+  -- cart.store.ts
+  -- counter.store.ts
+>>> counter
+  -- counter.component.ts
+  -- counter.component.html
+
+
+------------------------------- counter.store.ts -----------------------
+
+export interface CounterState {
+ count: number
+}
+
+const initialCounterstate: CounterState = {
+ count: 0  
+}
+
+export const CounterStore = signalStore(
+ withState(initialCounterstate),
+ withComputed(({count}) => ({
+  doubleCount: computed(() => count() * 2)
+ })),
+ withMethods(({count,...store}) => ({
+  increment(){
+   patchState(store,{count:count() + 1});
+  },
+  decrement(){
+   patchState(store,{count:count() - 1});
+  },
+  reset(){
+   patchState(store,{count:0});
+  },
+
+ }
+ 
+ )
+ 
+ )
+ 
+);
+
+------------------------------ counter.component.ts ---------------------
+import {CounterStore} from '../store/counter.store';
+
+@Component({
+  providers: [CounterStore]
+ }
+)
+export class CounterComponent {
+ counterStore = inject(CounterStore);
+}
+
+------------------------- counter.component.html ---------------------
+
+
+<div> {{counterStore.count()}}</div>
+<div> {{counterStore.doubleCount()}}</div>
+
+<div>
+ <button (click)="this.counterStore.increment()"></button>
+ <button (click)="this.counterStore.decrement()"></button>
+ <button (click)="this.counterStore.reset()"></button>
+</div>
+
+
+----------------------- cart.store.ts ------------------------
+
+export interface CartState {
+}
+
+const initialCartState: CartState = {
+ products: []
+};
+
+@Injectable({
+ providedIn : 'root'
+})
+
+export const CartStore = signalStore {
+ {providedIn: 'root's},
+ withState(initialCartState),
+ withComputed((products) => ({
+  totalPrice: computed(() => calculateTotalPrice(products()))
+ }))
+ withMethods(({products, ...store}) => ({
+  addToCart(product: IProduct) {
+   const updatedProduct = [...products(),product]
+   patchState(store,{products: updatedProduct})
+  },
+  
+  removeItem(if: number) {
+   const updatedProduct = products().filter((a) => a.id !== id);
+   patchState(store,{products: updatedProduct})
+  },
+  increment(id: number) {
+   const updatedProduct = products().map((product) => 
+    product.id === id ? {...product,quantity: product.quantity + 1} :      product
+   );
+   patchState(store,{products: updatedProduct});
+  },
+  decrement(id: number) {
+   const updatedProduct = products().map((product) => 
+    product.id === id ? {...product,quantity: product.quantity - 1} :      product
+   );
+   patchState(store,{products: updatedProduct});
+  }
+ }))
+}
+
+----------------------------- cart.component.ts ----------------------
+
+import {CartStore} from '../store/cart.store';
+
+export class CartComponent {
+ cartStore = inject(CartStore);
+}
+
+
+
+----------------------------- cart.component.html ----------------------
+
+<ul>
+ @for( item of cartStore.products()) {}
+  <li>
+   <div>
+    <button (click) = "cartStore.removeItem(item.id)"></button>
+   
+    < ! ------------ Quantity Controls ------------------>   
+
+    <button (click) = "cartStore.decrement(item.id)"></button>
+    <button (click) = "cartStore.increment(item.id)"></button>
+  
+    <div>
+     <p>Total amount : {{cartStore.totalPrice() | currency}} </p>
+    </div>
+   </div>
+  </li>
+</ul>
+
+
+------------------------- product.component.ts 
+-------------------------------
+
+import {CartStore} from '../store/cart.store';
+
+export class ProductsComponent implements OnInit{
+ cartStore = inject(CartStore);
+}
+
+addItemToCart(product: IProduct) {
+ this.cartStore.addToCart(product);
+}
+
+
+
+------------------- product.component.html ---------------------
+
+
+--------------------- app.component.ts ----------------
+
+import {CartStore} from './store/cart.store';
+
+cartStore = inject(CartStore);
+
+--------------------- app.component.html ----------------
+
+<button> {{cartStore.products().length}} </button>
+
+
+
+
+
+
+
+
